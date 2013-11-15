@@ -57,6 +57,15 @@
     });
     return obj;
   }
+  
+  // Unescape an HTML attribute.
+  function unescapeAttribute(escapedAttribute) {
+    return (escapedAttribute.replace("&gt;", ">")
+                            .replace("&lt;", "<")
+                            .replace("&#3a;", "'")
+                            .replace("&quot;", '"')
+                            .replace("&amp;", "&"));
+  }
 
   // Set default options where some option was not specified.
   function defaults(options, _defaults) {
@@ -328,6 +337,9 @@
       }
 
       tok.src = tok.attrs.src || tok.attrs.SRC;
+      if (this.options.escapeScriptAttributes) {
+        tok.src = unescapeAttribute(tok.src);
+      }
 
       if(tok.src && this.scriptStack.length) {
         // Defer this script until scriptStack is empty.
@@ -399,9 +411,13 @@
     // Build a script element from an atomic script token.
     WriteStream.prototype.buildScript = function(tok) {
       var el = this.doc.createElement(tok.tagName);
+      var unescape = this.options.unescapeScriptAttributes;
 
       // Set attributes
       eachKey(tok.attrs, function(name, value) {
+        if (unescape) {
+          value = unescapeAttribute(value);
+        }
         el.setAttribute(name, value);
       });
 
@@ -542,7 +558,8 @@
         done: doNothing,
         error: function(e) { throw e; },
         beforeWrite: function(str) { return str; },
-        afterWrite: doNothing
+        afterWrite: doNothing,
+        unescapeScriptAttributes: false
       });
 
       el =
