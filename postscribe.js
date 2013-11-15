@@ -58,13 +58,15 @@
     return obj;
   }
   
-  // Unescape an HTML attribute.
-  function unescapeAttribute(escapedAttribute) {
-    return (escapedAttribute.replace("&gt;", ">")
-                            .replace("&lt;", "<")
-                            .replace("&#3a;", "'")
-                            .replace("&quot;", '"')
-                            .replace("&amp;", "&"));
+  // Decode an HTML attribute.
+  function decodeAttribute(attribute) {
+    return (attribute.replace("&gt;", ">")
+                     .replace("&lt;", "<")
+                     .replace("&#39;", "'")
+                     .replace("&#x27;", "'")
+                     .replace("&apos;", "'")
+                     .replace("&quot;", '"')
+                     .replace("&amp;", "&"));
   }
 
   // Set default options where some option was not specified.
@@ -337,8 +339,8 @@
       }
 
       tok.src = tok.attrs.src || tok.attrs.SRC;
-      if (this.options.escapeScriptAttributes) {
-        tok.src = unescapeAttribute(tok.src);
+      if (this.options.decodeScriptAttributes) {
+        tok.src = decodeAttribute(tok.src);
       }
 
       if(tok.src && this.scriptStack.length) {
@@ -411,12 +413,12 @@
     // Build a script element from an atomic script token.
     WriteStream.prototype.buildScript = function(tok) {
       var el = this.doc.createElement(tok.tagName);
-      var unescape = this.options.unescapeScriptAttributes;
+      var decode = this.options.decodeScriptAttributes;
 
       // Set attributes
       eachKey(tok.attrs, function(name, value) {
         if (unescape) {
-          value = unescapeAttribute(value);
+          value = decodeAttribute(value);
         }
         el.setAttribute(name, value);
       });
@@ -559,7 +561,7 @@
         error: function(e) { throw e; },
         beforeWrite: function(str) { return str; },
         afterWrite: doNothing,
-        unescapeScriptAttributes: false
+        decodeScriptAttributes: false
       });
 
       el =
